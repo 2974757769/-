@@ -1,23 +1,58 @@
-# Compiled class file
-*.class
+import time
 
-# Log file
-*.log
+from lxml import etree
+import requests
+from fake_useragent import UserAgent
 
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+url = "https://www.picdg.com/8_8673/"
+# 小说主页的url
+ua = UserAgent()
+headers = {
+    'User-Agent': ua.random
+    # 使用随机的user-agent
+}
+response = requests.get(url=url, headers=headers)
+response.encoding = "gbk"
+# html网页中的编码方式
+html = response.text
+# 返回文本数据
+# print(html)
+ele = etree.HTML(html)
+# 对HTML文本初始化，构造Xpath解析对象，同时可以自动修正HTML文本
+chapter_name = ele.xpath('//dd/a/text()')
+# xpath获取章节，保存到chapter_name列表中
+chapter_url = ele.xpath('//dd/a/@href')
+# xpath获取每章小说对应的部分url
+for i in range(0, len(chapter_name)):
+    print(chapter_name[i])
+    # 打印文章标题
+    f = open('仙王的日常生活/' + chapter_name[i] + '.txt', 'w', encoding='utf-8')
+    # 将小说章节保存到仙王的日常生活文件夹下，以utf-8的编码方式
+    f.writelines(chapter_name[i] + "\r\n")
+    # 文章标题写入文档
+    # print(chapter_url[i])
+    Url = "https://www.picdg.com" + chapter_url[i]
+    # 每章小说对应的url
+    res = requests.get(url=Url, headers=headers)
+    # 响应类型为get
+    res.encoding = "gbk"
+    # html网页中的编码方式
+    html2 = res.text
+    # 返回文本数据
+    ele2 = etree.HTML(html2)
+    # 对HTML文本初始化，构造Xpath解析对象，同时可以自动修正HTML文本
+    chapter_body = ele2.xpath("//div[@id='content']/text()")
+    # xpath语法获取文章内容并保存到chapter_body中
+    for k in chapter_body:
+        if "\r\n" in chapter_body:
+            chapter_body.remove("\r\n")
+            # 移除文章内容中的换行
+    for j in range(0, len(chapter_body) - 2):
+        # 遍历chapter_body列表，省略文章末尾无用信息
+        print(chapter_body[j])
+        # 打印文章内容
+        f.writelines(chapter_body[j])
+        # 将每章的内容写入TXT文件
+    time.sleep(2)
+    f.close()
+    # 关闭TXT文件
